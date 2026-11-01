@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat — Aura Minimalist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="chat-body">
+    <div class="chat-app" id="chat-app">
+
+        <!-- ================= LEFT SIDEBAR ================= -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-badge">
+                        <i data-lucide="message-square"></i>
+                    </div>
+                    <span class="brand-text">Aura</span>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="btn-new-chat" title="New conversation" onclick="focusSearch()">
+                        <i data-lucide="plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-section">
+                <div class="search-input-wrapper">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input 
+                        type="text" 
+                        id="user-search-input" 
+                        placeholder="Search users..." 
+                        autocomplete="off"
+                        oninput="handleUserSearch(this.value)"
+                    >
+                    <button class="clear-search-btn hidden" id="btn-clear-search" onclick="clearSearch()" title="Clear">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Search Results Dropdown/Pane -->
+            <div class="search-results hidden" id="search-results">
+                <div class="search-results-header">Users Found</div>
+                <div class="search-results-list" id="search-results-list"></div>
+            </div>
+
+            <!-- Conversations List -->
+            <div class="conversations-wrapper">
+                <div class="conversations-header">
+                    <span>Recent Chats</span>
+                    <span class="chat-count" id="chat-count">0</span>
+                </div>
+                <div class="conversations-list" id="conversations-list">
+                    <!-- Dynamic conversation items loaded here -->
+                    <div class="loading-state" id="conversations-loading">
+                        <div class="spinner"></div>
+                        <span>Loading chats...</span>
+                    </div>
+                </div>
+                <div class="empty-conversations hidden" id="no-conversations">
+                    <i data-lucide="users"></i>
+                    <p>No conversations yet</p>
+                    <small>Search for a user above to start chatting</small>
+                </div>
+            </div>
+
+            <!-- Current User Profile Footer -->
+            <div class="sidebar-footer">
+                <div class="user-profile-pill">
+                    <div class="avatar-container">
+                        <img id="my-avatar" src="" alt="Avatar" class="avatar-img">
+                        <span class="status-indicator online"></span>
+                    </div>
+                    <div class="user-meta">
+                        <span class="user-name" id="my-username">Loading...</span>
+                        <span class="user-status-text">Active now</span>
+                    </div>
+                </div>
+                <button class="icon-btn logout-btn" onclick="handleLogout()" title="Log Out">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ================= MAIN CHAT AREA ================= -->
+        <main class="chat-main" id="chat-main">
+
+            <!-- Empty State (No conversation selected) -->
+            <div class="chat-placeholder" id="chat-placeholder">
+                <div class="placeholder-content">
+                    <div class="placeholder-icon">
+                        <i data-lucide="message-circle"></i>
+                    </div>
+                    <h2>No Chat Selected</h2>
+                    <p>Choose an existing conversation from the left, or search for a user to start sharing messages and Instagram reels.</p>
+                    <div class="quick-hints">
+                        <div class="hint-item">
+                            <i data-lucide="instagram"></i>
+                            <span>Paste any Instagram Reel URL to preview</span>
+                        </div>
+                        <div class="hint-item">
+                            <i data-lucide="shield"></i>
+                            <span>End-to-end private 1-on-1 messaging</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Chat View (Shown when conversation is open) -->
+            <div class="chat-active-view hidden" id="chat-active-view">
+                
+                <!-- Chat Header -->
+                <header class="chat-header">
+                    <div class="header-left">
+                        <button class="icon-btn mobile-back-btn" id="btn-back-chats" onclick="closeActiveChatOnMobile()" title="Back to conversations">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+                        <div class="avatar-container">
+                            <img id="partner-avatar" src="" alt="Partner" class="avatar-img">
+                            <span class="status-indicator" id="partner-status-dot"></span>
+                        </div>
+                        <div class="chat-partner-info">
+                            <h3 class="partner-name" id="partner-username">User</h3>
+                            <span class="partner-status" id="partner-status-label">Offline</span>
+                        </div>
+                    </div>
+
+                    <div class="header-right">
+                        <div class="header-status-badge" id="chat-room-badge">
+                            <span class="badge-dot"></span>
+                            <span>WebSocket Connected</span>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Messages Stream -->
+                <div class="messages-container" id="messages-container" onscroll="handleChatScroll()">
+                    <div class="messages-list" id="messages-list">
+                        <!-- Messages dynamically rendered here -->
+                    </div>
+
+                    <!-- Typing Indicator -->
+                    <div class="typing-indicator-bar hidden" id="typing-indicator">
+                        <div class="typing-bubble">
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                        </div>
+                        <span class="typing-text" id="typing-text">typing...</span>
+                    </div>
+                </div>
+
+                <!-- Scroll to Bottom Button -->
+                <button class="scroll-bottom-btn hidden" id="btn-scroll-bottom" onclick="scrollToBottom()" title="Scroll to bottom">
+                    <i data-lucide="chevron-down"></i>
+                </button>
+
+                <!-- Message Input Area -->
+                <div class="chat-input-area">
+                    <!-- Emoji Picker Dropdown -->
+                    <div class="emoji-picker-menu hidden" id="emoji-picker">
+                        <div class="emoji-picker-header">Quick Reactions & Emojis</div>
+                        <div class="emoji-grid" id="emoji-grid">
+                            <!-- Popular clean emojis -->
+                            <button type="button" class="emoji-item" onclick="insertEmoji('😊')">😊</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('🔥')">🔥</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('❤️')">❤️</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('👍')">👍</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('😂')">😂</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('✨')">✨</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('🙌')">🙌</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('🚀')">🚀</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('💯')">💯</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('👀')">👀</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('👏')">👏</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('🎉')">🎉</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('🤩')">🤩</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('💡')">💡</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('⚡')">⚡</button>
+                            <button type="button" class="emoji-item" onclick="insertEmoji('😎')">😎</button>
+                        </div>
+                    </div>
+
+                    <!-- Input Form Container -->
+                    <div class="input-composer">
+                        <button type="button" class="composer-action-btn" id="btn-toggle-emoji" onclick="toggleEmojiPicker()" title="Insert emoji">
+                            <i data-lucide="smile"></i>
+                        </button>
+
+                        <div class="composer-input-wrapper">
+                            <textarea 
+                                id="message-input" 
+                                placeholder="Type a message or paste an Instagram link... (Enter to send, Shift+Enter for newline)"
+                                rows="1"
+                                onkeydown="handleInputKeyDown(event)"
+                                oninput="handleInputTyping(event)"
+                            ></textarea>
+                        </div>
+
+                        <button type="button" class="btn-send" id="btn-send-message" onclick="sendMessage()" title="Send Message">
+                            <i data-lucide="arrow-up"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-notification hidden" id="toast-notification"></div>
+
+    <script src="/static/js/chat.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
